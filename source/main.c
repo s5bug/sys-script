@@ -6,6 +6,9 @@
 // Include the main libnx system header, for Switch development
 #include <switch.h>
 
+// Include custom errors
+#include "errors.h"
+
 // Sysmodules should not use applet*.
 u32 __nx_applet_type = AppletType_None;
 
@@ -37,23 +40,21 @@ void __attribute__((weak)) __appInit(void)
     if (R_FAILED(rc))
         fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_SM));
 
-    // Enable this if you want to use HID.
-    /*rc = hidInitialize();
+    rc = hidInitialize();
     if (R_FAILED(rc))
-        fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_HID));*/
+        fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_HID));
 
-    //Enable this if you want to use time.
-    /*rc = timeInitialize();
-    if (R_FAILED(rc))
-        fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_Time));
-
-    __libnx_init_time();*/
+    __libnx_init_time();
 
     rc = fsInitialize();
     if (R_FAILED(rc))
         fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_FS));
 
     fsdevMountSdmc();
+
+    rc = hiddbgInitialize();
+    if (R_FAILED(rc))
+        fatalThrow(MAKERESULT(Module_SysScript, SysScript_InitFail_HIDDBG));
 }
 
 void __attribute__((weak)) userAppExit(void);
@@ -61,10 +62,10 @@ void __attribute__((weak)) userAppExit(void);
 void __attribute__((weak)) __appExit(void)
 {
     // Cleanup default services.
+    hiddbgExit();
     fsdevUnmountAll();
     fsExit();
-    //timeExit();//Enable this if you want to use time.
-    //hidExit();// Enable this if you want to use HID.
+    hidExit();
     smExit();
 }
 

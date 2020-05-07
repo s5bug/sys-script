@@ -8289,7 +8289,7 @@ static Janet makef(FILE *f, int flags) {
 }
 
 /* Open a process */
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(__SWITCH__)
 static Janet cfun_io_popen(int32_t argc, Janet *argv) {
     (void) argc;
     (void) argv;
@@ -8455,6 +8455,7 @@ static Janet cfun_io_fclose(int32_t argc, Janet *argv) {
         return janet_wrap_nil();
     if (iof->flags & (JANET_FILE_NOT_CLOSEABLE))
         janet_panic("file not closable");
+#ifndef __SWITCH__
     if (iof->flags & JANET_FILE_PIPED) {
 #ifdef JANET_WINDOWS
 #define pclose _pclose
@@ -8465,10 +8466,13 @@ static Janet cfun_io_fclose(int32_t argc, Janet *argv) {
         if (status == -1) janet_panic("could not close file");
         return janet_wrap_integer(WEXITSTATUS(status));
     } else {
+#endif
         if (fclose(iof->file)) janet_panic("could not close file");
         iof->flags |= JANET_FILE_CLOSED;
         return janet_wrap_nil();
+#ifndef __SWITCH__
     }
+#endif
 }
 
 /* Seek a file */

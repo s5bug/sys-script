@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
         {
             JanetTable* env = janet_core_env(NULL);
 
-            // TODO load from file
+            janet_dostring(env, "(dofile \"sdmc:/scripts/script1.janet\")", "main", NULL);
         }
     }
 

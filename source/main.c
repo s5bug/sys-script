@@ -9,6 +9,9 @@
 // Include custom errors
 #include "errors.h"
 
+// Include Janet, the script runtime
+#include "janet.h"
+
 // Sysmodules should not use applet*.
 u32 __nx_applet_type = AppletType_None;
 
@@ -73,10 +76,24 @@ void __attribute__((weak)) __appExit(void)
 int main(int argc, char* argv[])
 {
     // Initialization code can go here.
+    janet_init();
 
     // Your code / main loop goes here.
     // If you need threads, you can use threadCreate etc.
+    while(true)
+    {
+        hidScanInput();
+
+        if(hidKeyboardDown(KBD_F1))
+        {
+            JanetTable* env = janet_core_env(NULL);
+
+            // TODO load from file
+        }
+    }
 
     // Deinitialization and resources clean up code can go here.
+    janet_deinit();
+
     return 0;
 }

@@ -86,10 +86,10 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     janet_fixarity(argc, 6);
     JanetKeyword deviceType = janet_getkeyword(argv, 0);
     JanetKeyword interfaceType = janet_getkeyword(argv, 1);
-    u32 body = janet_getnat(argv, 2);
-    u32 buttons = janet_getnat(argv, 3);
-    u32 leftGrip = janet_getnat(argv, 4);
-    u32 rightGrip = janet_getnat(argv, 5);
+    u32 body = (u32) janet_getnumber(argv, 2);
+    u32 buttons = (u32) janet_getnumber(argv, 3);
+    u32 leftGrip = (u32) janet_getnumber(argv, 4);
+    u32 rightGrip = (u32) janet_getnumber(argv, 5);
 
     u8 deviceTypeNum = 0;
     Janet deviceTypeKw = janet_wrap_keyword(deviceType);
@@ -128,14 +128,14 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     u64 handle;
     Result rc = hiddbgAttachHdlsVirtualDevice(&handle, &info);
     if(R_FAILED(rc))
-        janet_panic("failed to attach virtual device");
+        janet_panicf("failed to attach virtual device: code %#x", rc);
     
     HiddbgHdlsState state = { 0 };
     state.batteryCharge = 4;
     
     rc = hiddbgSetHdlsState(handle, &state);
     if(R_FAILED(rc))
-        janet_panic("failed to set state of virtual device");
+        janet_panicf("failed to set state of virtual device: code %#x", rc);
 
     Janet jHandle = janet_wrap_u64(handle);
     Janet jState = janet_wrap_struct(stateToJanet(&state));
@@ -146,7 +146,7 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     return janet_wrap_tuple(jVirtualDevice);
 }
 
-Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
+static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 2);
     JanetTuple handleAndState = janet_gettuple(argv, 0);
@@ -178,11 +178,11 @@ Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 const JanetReg hiddbg_cfuns[] =
 {
     {
-        "attach", module_hiddbg_attach,
+        "hiddbg/attach", module_hiddbg_attach,
         "(hiddbg/attach type interface body buttons left-grip right-grip)\n\nAttaches and returns a new virtual controller.",
     },
     {
-        "set-buttons", module_hiddbg_set_buttons,
+        "hiddbg/set-buttons", module_hiddbg_set_buttons,
         "(hiddbg/set-buttons controller buttons)\n\nSets the buttons of the specified controller."
     },
     {NULL, NULL, NULL}

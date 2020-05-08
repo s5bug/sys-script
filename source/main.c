@@ -46,6 +46,19 @@ void __attribute__((weak)) __appInit(void)
     if (R_FAILED(rc))
         fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_SM));
 
+    if (hosversionGet() == 0)
+    {
+        rc = setsysInitialize();
+        if (R_SUCCEEDED(rc))
+        {
+            SetSysFirmwareVersion fw;
+            rc = setsysGetFirmwareVersion(&fw);
+            if (R_SUCCEEDED(rc))
+                hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
+            setsysExit();
+        }
+    }
+
     rc = hidInitialize();
     if (R_FAILED(rc))
         fatalThrow(MAKERESULT(Module_Libnx, LibnxError_InitFail_HID));
@@ -77,6 +90,10 @@ void __attribute__((weak)) __appExit(void)
 int main(int argc, char* argv[])
 {
     // Initialization code can go here.
+    Result rc = hiddbgAttachHdlsWorkBuffer();
+    if (R_FAILED(rc))
+        fatalThrow(rc);
+
     janet_init();
 
     // Your code / main loop goes here.
@@ -88,9 +105,14 @@ int main(int argc, char* argv[])
         if(hidKeyboardDown(KBD_F1))
         {
             JanetTable* env = janet_core_env(NULL);
-            janet_cfuns(env, "hiddbg", hiddbg_cfuns);
+            janet_cfuns(env, NULL, hiddbg_cfuns);
 
-            janet_dostring(env, "(dofile \"sdmc:/scripts/script1.janet\")", "main", NULL);
+            janet_dostring(env,
+                "(def log (file/open \"sdmc:/jout.log\" :a))\n"
+                "(setdyn :out log)\n"
+                "(setdyn :err log)\n"
+                "(try (dofile \"sdmc:/scripts/script1.janet\") ([err fiber] (debug/stacktrace fiber)))\n"
+                "(file/close log)", "main", NULL);
         }
 
         svcSleepThread(6250000);
@@ -98,6 +120,8 @@ int main(int argc, char* argv[])
 
     // Deinitialization and resources clean up code can go here.
     janet_deinit();
+
+    rc = hiddbgReleaseHdlsWorkBuffer();
 
     return 0;
 }

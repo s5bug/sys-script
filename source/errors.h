@@ -3,6 +3,7 @@
 
 enum {
     Module_SysScript = 745,
+    Module_Janet = 746,
 };
 
 enum {

@@ -26,6 +26,8 @@
 #ifndef JANETCONF_H
 #define JANETCONF_H
 
+#include <switch.h>
+
 #define JANET_VERSION_MAJOR 1
 #define JANET_VERSION_MINOR 8
 #define JANET_VERSION_PATCH 1
@@ -48,11 +50,11 @@
 
 /* Other settings */
 #define JANET_NO_ASSEMBLER
-#define JANET_NO_PEG
-#define JANET_NO_TYPED_ARRAY
-#define JANET_NO_INT_TYPES
+/* #define JANET_NO_PEG */
+/* #define JANET_NO_TYPED_ARRAY */
+/* #define JANET_NO_INT_TYPES */
 /* #define JANET_NO_PRF */
-/* #define JANET_OUT_OF_MEMORY do { printf("janet out of memory\n"); exit(1); } while (0) */
+#define JANET_OUT_OF_MEMORY do { fatalThrow(0x4a8); exit(1); } while (0)
 /* #define JANET_RECURSION_GUARD 1024 */
 /* #define JANET_MAX_PROTO_DEPTH 200 */
 /* #define JANET_MAX_MACRO_EXPAND 200 */

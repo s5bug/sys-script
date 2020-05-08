@@ -3044,7 +3044,9 @@ void janet_signalv(JanetSignal sig, Janet message) {
         longjmp(*janet_vm_jmp_buf, sig);
 #endif
     } else {
-        fputs((const char *)janet_formatc("janet top level signal - %v\n", message), stdout);
+        FILE* log = fopen("sdmc:/output.log", "a");
+        fputs((const char *)janet_formatc("janet top level signal - %v\n", message), log);
+        fclose(log);
         exit(1);
     }
 }

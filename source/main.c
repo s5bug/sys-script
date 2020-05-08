@@ -12,11 +12,14 @@
 // Include Janet, the script runtime
 #include "janet.h"
 
+// Include custom modules
+#include "module_hiddbg.h"
+
 // Sysmodules should not use applet*.
 u32 __nx_applet_type = AppletType_None;
 
 // Adjust size as needed.
-#define INNER_HEAP_SIZE 0x80000
+#define INNER_HEAP_SIZE 0x300000
 size_t nx_inner_heap_size = INNER_HEAP_SIZE;
 char   nx_inner_heap[INNER_HEAP_SIZE];
 
@@ -85,9 +88,12 @@ int main(int argc, char* argv[])
         if(hidKeyboardDown(KBD_F1))
         {
             JanetTable* env = janet_core_env(NULL);
+            janet_cfuns(env, "hiddbg", hiddbg_cfuns);
 
             janet_dostring(env, "(dofile \"sdmc:/scripts/script1.janet\")", "main", NULL);
         }
+
+        svcSleepThread(6250000);
     }
 
     // Deinitialization and resources clean up code can go here.

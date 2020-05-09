@@ -4,82 +4,9 @@
 
 #include "errors.h"
 
-static JanetStruct stateToJanet(HiddbgHdlsState* state)
-{
-    Janet* jBeginJoysticks = janet_tuple_begin(JOYSTICK_NUM_STICKS);
-    for(int32_t joystick = 0; joystick < JOYSTICK_NUM_STICKS; joystick++)
-    {
-        Janet positions[2] =
-        {
-            janet_wrap_integer(state->joysticks[joystick].dx),
-            janet_wrap_integer(state->joysticks[joystick].dy)
-        };
-        jBeginJoysticks[joystick] = janet_wrap_tuple(janet_tuple_n(positions, 2));
-    }
-    JanetTuple jJoysticks = janet_tuple_end(jBeginJoysticks);
-
-    JanetKV* jBeginState = janet_struct_begin(4);
-    janet_struct_put(jBeginState, janet_ckeywordv("charge"), janet_wrap_integer(state->batteryCharge));
-    janet_struct_put(jBeginState, janet_ckeywordv("flags"), janet_wrap_integer(state->flags));
-    janet_struct_put(jBeginState, janet_ckeywordv("buttons"), janet_wrap_u64(state->buttons));
-    janet_struct_put(jBeginState, janet_ckeywordv("joysticks"), janet_wrap_tuple(jJoysticks));
-    return janet_struct_end(jBeginState);
-}
-
-static void janetToState(HiddbgHdlsState* state, JanetStruct jStruct)
-{
-    Janet jCharge = janet_struct_get(jStruct, janet_ckeywordv("charge"));
-    Janet jFlags = janet_struct_get(jStruct, janet_ckeywordv("flags"));
-    Janet jButtons = janet_struct_get(jStruct, janet_ckeywordv("buttons"));
-    Janet jJoysticks = janet_struct_get(jStruct, janet_ckeywordv("joysticks"));
-
-    if(janet_checktype(jCharge, JANET_NUMBER))
-    {
-        state->batteryCharge = janet_unwrap_integer(jCharge);
-    }
-
-    if(janet_checktype(jFlags, JANET_NUMBER))
-    {
-        state->flags = janet_unwrap_integer(jFlags);
-    }
-
-    if(janet_checktype(jButtons, JANET_NUMBER))
-    {
-        state->buttons = janet_unwrap_u64(jButtons); 
-    }
-
-    if(janet_checktype(jJoysticks, JANET_TUPLE))
-    {
-        JanetTuple jJoysticksTuple = janet_unwrap_tuple(jJoysticks);
-        if(janet_tuple_length(jJoysticksTuple) == JOYSTICK_NUM_STICKS)
-        {
-            for(int32_t joystick = 0; joystick < JOYSTICK_NUM_STICKS; joystick++)
-            {
-                Janet jJoystickEntry = jJoysticksTuple[joystick];
-                if(janet_checktype(jJoystickEntry, JANET_TUPLE))
-                {
-                    JanetTuple jJoystickEntryTuple = janet_unwrap_tuple(jJoystickEntry);
-                    if(janet_tuple_length(jJoystickEntryTuple) == 2)
-                    {
-                        Janet jJoystickEntryX = jJoystickEntryTuple[0];
-                        Janet jJoystickEntryY = jJoystickEntryTuple[1];
-
-                        if(janet_checktype(jJoystickEntryX, JANET_NUMBER))
-                        {
-                            state->joysticks[joystick].dx = janet_unwrap_integer(jJoystickEntryX);
-                        }
-
-                        if(janet_checktype(jJoystickEntryY, JANET_NUMBER))
-                        {
-                            state->joysticks[joystick].dy = janet_unwrap_integer(jJoystickEntryY);
-                        }
-                    }
-                }
-            }
-        }
-        
-    }
-}
+static JanetAbstractType controller_state_type = {
+    "hiddbg/controller-state", JANET_ATEND_NAME
+};
 
 static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
 {
@@ -130,20 +57,38 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     if(R_FAILED(rc))
         janet_panicf("failed to attach virtual device: code %#x", rc);
     
-    HiddbgHdlsState state = { 0 };
-    state.batteryCharge = 4;
+    HiddbgHdlsState* state = (HiddbgHdlsState*) janet_abstract(&controller_state_type, sizeof(HiddbgHdlsState));
+    memset(state, 0, sizeof(HiddbgHdlsState));
+    state->batteryCharge = 4;
     
-    rc = hiddbgSetHdlsState(handle, &state);
+    rc = hiddbgSetHdlsState(handle, state);
     if(R_FAILED(rc))
         janet_panicf("failed to set state of virtual device: code %#x", rc);
 
     Janet jHandle = janet_wrap_u64(handle);
-    Janet jState = janet_wrap_struct(stateToJanet(&state));
+    Janet jState = janet_wrap_abstract((void*) state);
     
     Janet jVirtualDeviceArr[2] = {jHandle, jState};
     JanetTuple jVirtualDevice = janet_tuple_n(jVirtualDeviceArr, 2);
 
     return janet_wrap_tuple(jVirtualDevice);
+}
+
+static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
+{
+    janet_fixarity(argc, 1);
+    JanetTuple handleAndState = janet_gettuple(argv, 0);
+    Janet jHandle = handleAndState[0];
+    if(janet_checktype(jHandle, JANET_NUMBER))
+    {
+        u64 handle = janet_unwrap_u64(jHandle);
+
+        Result rc = hiddbgDetachHdlsVirtualDevice(handle);
+        if(R_FAILED(rc))
+            janet_panicf("failed to detach virtual device: code %#x", rc);
+    }
+
+    return janet_wrap_nil();
 }
 
 static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
@@ -159,17 +104,14 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 
     Janet jHandle = handleAndState[0];
     Janet jState = handleAndState[1];
-    if(janet_checktype(jHandle, JANET_NUMBER) && janet_checktype(jState, JANET_STRUCT))
+    if(janet_checktype(jHandle, JANET_NUMBER) && janet_checktype(jState, JANET_POINTER))
     {
         u64 handle = janet_unwrap_u64(jHandle);
-        JanetStruct state = janet_unwrap_struct(jState);
-        HiddbgHdlsState nState = { 0 };
+        HiddbgHdlsState* state = (HiddbgHdlsState*) janet_unwrap_abstract(jState);
 
-        janetToState(&nState, state);
+        state->buttons = buttons;
 
-        nState.buttons = buttons; // FIXME
-
-        hiddbgSetHdlsState(handle, &nState);
+        hiddbgSetHdlsState(handle, state);
     }
 
     return janet_wrap_nil();
@@ -180,6 +122,10 @@ const JanetReg hiddbg_cfuns[] =
     {
         "hiddbg/attach", module_hiddbg_attach,
         "(hiddbg/attach type interface body buttons left-grip right-grip)\n\nAttaches and returns a new virtual controller.",
+    },
+    {
+        "hiddbg/detach", module_hiddbg_detach,
+        "(hiddbg/detach controller)\n\nDetaches a virtual controller.",
     },
     {
         "hiddbg/set-buttons", module_hiddbg_set_buttons,

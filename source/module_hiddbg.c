@@ -4,7 +4,8 @@
 
 #include "errors.h"
 
-static JanetAbstractType controller_state_type = {
+static const JanetAbstractType controller_state_type =
+{
     "hiddbg/controller-state", JANET_ATEND_NAME
 };
 

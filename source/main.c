@@ -13,6 +13,7 @@
 #include "janet.h"
 
 // Include custom modules
+#include "module_switch.h"
 #include "module_hiddbg.h"
 
 // Sysmodules should not use applet*.
@@ -105,6 +106,7 @@ int main(int argc, char* argv[])
         if(hidKeyboardDown(KBD_F1))
         {
             JanetTable* env = janet_core_env(NULL);
+            janet_cfuns(env, NULL, switch_cfuns);
             janet_cfuns(env, NULL, hiddbg_cfuns);
 
             janet_dostring(env,

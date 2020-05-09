@@ -117,6 +117,66 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
     return janet_wrap_nil();
 }
 
+static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
+{
+    janet_arity(argc, 3, 4);
+    JanetTuple handleAndState = janet_gettuple(argv, 0);
+    Janet jIndex = argv[1];
+    size_t joystickIndex = 0;
+    if(janet_checktype(jIndex, JANET_NUMBER))
+    {
+        joystickIndex = (size_t) janet_unwrap_number(jIndex);
+    }
+    else if(janet_checktype(jIndex, JANET_KEYWORD))
+    {
+        if(janet_keyeq(jIndex, "left"))
+        {
+            joystickIndex = 0;
+        }
+        else if(janet_keyeq(jIndex, "right"))
+        {
+            joystickIndex = 1;
+        }
+    }
+    s32 jx = 0;
+    s32 jy = 0;
+    if(argc == 3)
+    {
+        JanetTuple xAndY = janet_gettuple(argv, 2);
+
+        Janet x = xAndY[0];
+        Janet y = xAndY[1];
+        if(janet_checktype(x, JANET_NUMBER))
+        {
+            jx = janet_unwrap_integer(x);
+        }
+        if(janet_checktype(y, JANET_NUMBER))
+        {
+            jy = janet_unwrap_integer(y);
+        }
+    }
+    else if(argc == 4)
+    {
+        jx = janet_getinteger(argv, 2);
+        jy = janet_getinteger(argv, 3);
+    }
+
+    Janet jHandle = handleAndState[0];
+    Janet jState = handleAndState[1];
+    if(janet_checktype(jHandle, JANET_NUMBER) && janet_checktype(jState, JANET_POINTER))
+    {
+        u64 handle = janet_unwrap_u64(jHandle);
+        HiddbgHdlsState* state = (HiddbgHdlsState*) janet_unwrap_abstract(jState);
+
+        state->joysticks[joystickIndex].dx = jx;
+        state->joysticks[joystickIndex].dy = jy;
+
+        hiddbgSetHdlsState(handle, state);
+    }
+
+    return janet_wrap_nil();
+}
+
 const JanetReg hiddbg_cfuns[] =
 {
     {
@@ -129,7 +189,11 @@ const JanetReg hiddbg_cfuns[] =
     },
     {
         "hiddbg/set-buttons", module_hiddbg_set_buttons,
-        "(hiddbg/set-buttons controller buttons)\n\nSets the buttons of the specified controller."
+        "(hiddbg/set-buttons controller buttons)\n\nSets the buttons of the specified controller.",
+    },
+    {
+        "hiddbg/set-joystick", module_hiddbg_set_joystick,
+        "(hiddbg/set-joystick controller index x y)\n\nSets a joystick of the specified controller.",
     },
     {NULL, NULL, NULL}
 };

@@ -87,6 +87,10 @@ static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
         if(R_FAILED(rc))
             janet_panicf("failed to detach virtual device: code %#x", rc);
     }
+    else
+    {
+        janet_panicf("bad slot 0, expected tuple of number and pointer, got %v", argv[0]);
+    }
 
     return janet_wrap_nil();
 }
@@ -101,6 +105,10 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
     {
         buttons = janet_unwrap_u64(jButtons);
     }
+    else
+    {
+        janet_panicf("bad slot 1, expected int/u64, got %v", jButtons);
+    }
 
     Janet jHandle = handleAndState[0];
     Janet jState = handleAndState[1];
@@ -112,6 +120,10 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
         state->buttons = buttons;
 
         hiddbgSetHdlsState(handle, state);
+    }
+    else
+    {
+        janet_panicf("bad slot 0, expected tuple of number and pointer, got %v", argv[0]);
     }
 
     return janet_wrap_nil();
@@ -137,6 +149,14 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         {
             joystickIndex = 1;
         }
+        else
+        {
+            janet_panicf("bad joystick keyword, expected :left|:right, got %v", jIndex);
+        }
+    }
+    else
+    {
+        janet_panicf("bad slot 1, expected number|keyword, got %v", jIndex);
     }
     s32 jx = 0;
     s32 jy = 0;
@@ -150,9 +170,17 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         {
             jx = janet_unwrap_integer(x);
         }
+        else
+        {
+            janet_panicf("bad joystick axis position, expected number, got %v", jx);
+        }
         if(janet_checktype(y, JANET_NUMBER))
         {
             jy = janet_unwrap_integer(y);
+        }
+        else
+        {
+            janet_panicf("bad joystick axis position, expected number, got %v", jy);
         }
     }
     else if(argc == 4)
@@ -172,6 +200,10 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         state->joysticks[joystickIndex].dy = jy;
 
         hiddbgSetHdlsState(handle, state);
+    }
+    else
+    {
+        janet_panicf("bad slot 0, expected tuple of number and pointer, got %v", argv[0]);
     }
 
     return janet_wrap_nil();

@@ -2,8 +2,6 @@
 
 #include <switch.h>
 
-#include "errors.h"
-
 static const JanetAbstractType controller_state_type =
 {
     "hiddbg/controller-state", JANET_ATEND_NAME

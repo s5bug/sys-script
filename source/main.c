@@ -6,9 +6,6 @@
 // Include the main libnx system header, for Switch development
 #include <switch.h>
 
-// Include custom errors
-#include "errors.h"
-
 // Include Janet, the script runtime
 #include "janet.h"
 
@@ -72,7 +69,7 @@ void __attribute__((weak)) __appInit(void)
 
     rc = hiddbgInitialize();
     if (R_FAILED(rc))
-        fatalThrow(MAKERESULT(Module_SysScript, SysScript_InitFail_HIDDBG));
+        fatalThrow(rc);
 }
 
 void __attribute__((weak)) userAppExit(void);

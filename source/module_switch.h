@@ -3,7 +3,7 @@
 
 #include "janet.h"
 
-extern const JanetAbstractType event_type;
+extern const JanetAbstractType switch_event_type;
 
 extern const JanetReg switch_cfuns[];
 

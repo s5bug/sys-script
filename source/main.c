@@ -12,6 +12,7 @@
 // Include custom modules
 #include "module_switch.h"
 #include "module_hiddbg.h"
+#include "module_vi.h"
 
 // Sysmodules should not use applet*.
 u32 __nx_applet_type = AppletType_None;
@@ -70,6 +71,10 @@ void __attribute__((weak)) __appInit(void)
     rc = hiddbgInitialize();
     if (R_FAILED(rc))
         fatalThrow(rc);
+    
+    rc = viInitialize(ViServiceType_System);
+    if (R_FAILED(rc))
+        fatalThrow(rc);
 }
 
 void __attribute__((weak)) userAppExit(void);
@@ -77,6 +82,7 @@ void __attribute__((weak)) userAppExit(void);
 void __attribute__((weak)) __appExit(void)
 {
     // Cleanup default services.
+    viExit();
     hiddbgExit();
     fsdevUnmountAll();
     fsExit();
@@ -105,6 +111,7 @@ int main(int argc, char* argv[])
             JanetTable* env = janet_core_env(NULL);
             janet_cfuns(env, NULL, switch_cfuns);
             janet_cfuns(env, NULL, hiddbg_cfuns);
+            janet_cfuns(env, NULL, vi_cfuns);
 
             janet_dostring(env,
                 "(def log (file/open \"sdmc:/jout.log\" :a))\n"

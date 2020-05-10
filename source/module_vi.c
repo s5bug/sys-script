@@ -13,20 +13,21 @@ static Janet module_vi_default_display(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 0);
 
-    ViDisplay* disp = (ViDisplay*) janet_abstract(&vi_display_type, sizeof(ViDisplay));
+    ViDisplay* disp = janet_abstract(&vi_display_type, sizeof(ViDisplay));
+    memset(disp, 0, sizeof(ViDisplay));
 
     Result rc = viOpenDefaultDisplay(disp);
     if(R_FAILED(rc))
         janet_panicf("failed to open default display: code %#x", rc);
     
-    return janet_wrap_abstract((void*) disp);
+    return janet_wrap_abstract(disp);
 }
 
 static Janet module_vi_close_display(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
 
-    ViDisplay* disp = (ViDisplay*) janet_getabstract(argv, 0, &vi_display_type);
+    ViDisplay* disp = janet_getabstract(argv, 0, &vi_display_type);
 
     Result rc = viCloseDisplay(disp);
     if(R_FAILED(rc))
@@ -39,15 +40,16 @@ static Janet module_vi_vsync_event(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
 
-    ViDisplay* disp = (ViDisplay*) janet_getabstract(argv, 0, &vi_display_type);
+    ViDisplay* disp = janet_getabstract(argv, 0, &vi_display_type);
 
-    Event* evt = (Event*) janet_abstract(&switch_event_type, sizeof(Event));
+    Event* evt = janet_abstract(&switch_event_type, sizeof(Event));
+    memset(evt, 0, sizeof(Event));
 
     Result rc = viGetDisplayVsyncEvent(disp, evt);
     if(R_FAILED(rc))
         janet_panicf("failed to get display's vsync event: code %#x", rc);
     
-    return janet_wrap_abstract((void*) evt);
+    return janet_wrap_abstract(evt);
 }
 
 const JanetReg vi_cfuns[] =

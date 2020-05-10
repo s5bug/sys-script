@@ -56,7 +56,9 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     info.colorLeftGrip = leftGrip;
     info.colorRightGrip = rightGrip;
 
-    Controller* controller = (Controller*) janet_abstract(&controller_type, sizeof(Controller));
+    Controller* controller = janet_abstract(&controller_type, sizeof(Controller));
+    memset(controller, 0, sizeof(Controller));
+    
     Result rc = hiddbgAttachHdlsVirtualDevice(&controller->handle, &info);
     if(R_FAILED(rc))
         janet_panicf("failed to attach virtual device: code %#x", rc);
@@ -67,13 +69,13 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     if(R_FAILED(rc))
         janet_panicf("failed to set state of virtual device: code %#x", rc);
 
-    return janet_wrap_abstract((void*) controller);
+    return janet_wrap_abstract(controller);
 }
 
 static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
-    Controller* controller = (Controller*) janet_getabstract(argv, 0, &controller_type);
+    Controller* controller = janet_getabstract(argv, 0, &controller_type);
     
     Result rc = hiddbgDetachHdlsVirtualDevice(controller->handle);
     if(R_FAILED(rc))
@@ -85,7 +87,7 @@ static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
 static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 2);
-    Controller* controller = (Controller*) janet_getabstract(argv, 0, &controller_type);
+    Controller* controller = janet_getabstract(argv, 0, &controller_type);
     Janet jButtons = argv[1];
     u64 buttons = 0;
     if(janet_checktype(jButtons, JANET_ABSTRACT))
@@ -108,7 +110,7 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
 {
     janet_arity(argc, 3, 4);
-    Controller* controller = (Controller*) janet_getabstract(argv, 0, &controller_type);
+    Controller* controller = janet_getabstract(argv, 0, &controller_type);
     Janet jIndex = argv[1];
     size_t joystickIndex = 0;
     if(janet_checktype(jIndex, JANET_NUMBER))

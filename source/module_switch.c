@@ -11,7 +11,7 @@ static Janet module_switch_close_event(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
 
-    Event* event = (Event*) janet_getabstract(argv, 0, &switch_event_type);
+    Event* event = janet_getabstract(argv, 0, &switch_event_type);
 
     eventClose(event);
 
@@ -22,7 +22,7 @@ static Janet module_switch_event_wait(int32_t argc, Janet* argv)
 {
     janet_arity(argc, 1, 2);
     
-    Event* event = (Event*) janet_getabstract(argv, 0, &switch_event_type);
+    Event* event = janet_getabstract(argv, 0, &switch_event_type);
     u64 timeout = UINT64_MAX;
     if(argc == 2)
     {

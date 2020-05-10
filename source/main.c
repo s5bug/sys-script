@@ -18,7 +18,7 @@
 u32 __nx_applet_type = AppletType_None;
 
 // Adjust size as needed.
-#define INNER_HEAP_SIZE 0x300000
+#define INNER_HEAP_SIZE 0x400000
 size_t nx_inner_heap_size = INNER_HEAP_SIZE;
 char   nx_inner_heap[INNER_HEAP_SIZE];
 

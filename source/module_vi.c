@@ -22,6 +22,19 @@ static Janet module_vi_default_display(int32_t argc, Janet* argv)
     return janet_wrap_abstract((void*) disp);
 }
 
+static Janet module_vi_close_display(int32_t argc, Janet* argv)
+{
+    janet_fixarity(argc, 1);
+
+    ViDisplay* disp = (ViDisplay*) janet_getabstract(argv, 0, &vi_display_type);
+
+    Result rc = viCloseDisplay(disp);
+    if(R_FAILED(rc))
+        janet_panicf("failed to close display: code %#x", rc);
+    
+    return janet_wrap_nil();
+}
+
 static Janet module_vi_vsync_event(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
@@ -40,11 +53,15 @@ static Janet module_vi_vsync_event(int32_t argc, Janet* argv)
 const JanetReg vi_cfuns[] =
 {
     {
-        "vi/default-display", &module_vi_default_display,
+        "vi/default-display", module_vi_default_display,
         "(vi/default-display)\n\nOpens the Switch's default display."
     },
     {
-        "vi/vsync-event", &module_vi_vsync_event,
+        "vi/close-display", module_vi_close_display,
+        "(vi/close-display display)\n\nCloses a display."
+    },
+    {
+        "vi/vsync-event", module_vi_vsync_event,
         "(vi/vsync-event)\n\nGets the VSync event of the specified display."
     },
     {NULL, NULL, NULL}

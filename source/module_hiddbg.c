@@ -7,18 +7,9 @@ typedef struct {
     HiddbgHdlsState state;
 } Controller;
 
-static int controller_gc(void* data, size_t size)
-{
-    Controller* c = (Controller*) data;
-
-    hiddbgDetachHdlsVirtualDevice(c->handle);
-
-    return 0;
-}
-
 static const JanetAbstractType controller_type =
 {
-    "hiddbg/controller", controller_gc, JANET_ATEND_GC
+    "hiddbg/controller", JANET_ATEND_NAME
 };
 
 static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
@@ -82,8 +73,7 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
 static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
-    JanetAbstract jController = janet_getabstract(argv, 0, &controller_type);
-    Controller* controller = (Controller*) jController;
+    Controller* controller = (Controller*) janet_getabstract(argv, 0, &controller_type);
     
     Result rc = hiddbgDetachHdlsVirtualDevice(controller->handle);
     if(R_FAILED(rc))
@@ -95,7 +85,7 @@ static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
 static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 2);
-    JanetAbstract jController = janet_getabstract(argv, 0, &controller_type);
+    Controller* controller = (Controller*) janet_getabstract(argv, 0, &controller_type);
     Janet jButtons = argv[1];
     u64 buttons = 0;
     if(janet_checktype(jButtons, JANET_ABSTRACT))
@@ -107,7 +97,6 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
         janet_panicf("bad slot 1, expected u64, got %v", jButtons);
     }
 
-    Controller* controller = (Controller*) jController;
     controller->state.buttons = buttons;
     Result rc = hiddbgSetHdlsState(controller->handle, &controller->state);
     if(R_FAILED(rc))
@@ -119,7 +108,7 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
 {
     janet_arity(argc, 3, 4);
-    JanetAbstract jController = janet_getabstract(argv, 0, &controller_type);
+    Controller* controller = (Controller*) janet_getabstract(argv, 0, &controller_type);
     Janet jIndex = argv[1];
     size_t joystickIndex = 0;
     if(janet_checktype(jIndex, JANET_NUMBER))
@@ -176,7 +165,6 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         jy = janet_getinteger(argv, 3);
     }
 
-    Controller* controller = (Controller*) jController;
     controller->state.joysticks[joystickIndex].dx = jx;
     controller->state.joysticks[joystickIndex].dy = jy;
     Result rc = hiddbgSetHdlsState(controller->handle, &controller->state);

@@ -2,9 +2,23 @@
 
 #include <switch.h>
 
-static const JanetAbstractType controller_state_type =
+typedef struct {
+    u64 handle;
+    HiddbgHdlsState state;
+} Controller;
+
+static int controller_gc(void* data, size_t size)
 {
-    "hiddbg/controller-state", JANET_ATEND_NAME
+    Controller* c = (Controller*) data;
+
+    hiddbgDetachHdlsVirtualDevice(c->handle);
+
+    return 0;
+}
+
+static const JanetAbstractType controller_type =
+{
+    "hiddbg/controller", controller_gc, JANET_ATEND_GC
 };
 
 static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
@@ -51,45 +65,29 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     info.colorLeftGrip = leftGrip;
     info.colorRightGrip = rightGrip;
 
-    u64 handle;
-    Result rc = hiddbgAttachHdlsVirtualDevice(&handle, &info);
+    Controller* controller = (Controller*) janet_abstract(&controller_type, sizeof(Controller));
+    Result rc = hiddbgAttachHdlsVirtualDevice(&controller->handle, &info);
     if(R_FAILED(rc))
         janet_panicf("failed to attach virtual device: code %#x", rc);
     
-    HiddbgHdlsState* state = (HiddbgHdlsState*) janet_abstract(&controller_state_type, sizeof(HiddbgHdlsState));
-    memset(state, 0, sizeof(HiddbgHdlsState));
-    state->batteryCharge = 4;
+    controller->state.batteryCharge = 4;
     
-    rc = hiddbgSetHdlsState(handle, state);
+    rc = hiddbgSetHdlsState(controller->handle, &controller->state);
     if(R_FAILED(rc))
         janet_panicf("failed to set state of virtual device: code %#x", rc);
 
-    Janet jHandle = janet_wrap_u64(handle);
-    Janet jState = janet_wrap_abstract((void*) state);
-    
-    Janet jVirtualDeviceArr[2] = {jHandle, jState};
-    JanetTuple jVirtualDevice = janet_tuple_n(jVirtualDeviceArr, 2);
-
-    return janet_wrap_tuple(jVirtualDevice);
+    return janet_wrap_abstract((void*) controller);
 }
 
 static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
-    JanetTuple handleAndState = janet_gettuple(argv, 0);
-    Janet jHandle = handleAndState[0];
-    if(janet_checktype(jHandle, JANET_ABSTRACT))
-    {
-        u64 handle = janet_unwrap_u64(jHandle);
-
-        Result rc = hiddbgDetachHdlsVirtualDevice(handle);
-        if(R_FAILED(rc))
-            janet_panicf("failed to detach virtual device: code %#x", rc);
-    }
-    else
-    {
-        janet_panicf("bad slot 0, expected tuple of u64 and pointer, got %v", argv[0]);
-    }
+    JanetAbstract jController = janet_getabstract(argv, 0, &controller_type);
+    Controller* controller = (Controller*) jController;
+    
+    Result rc = hiddbgDetachHdlsVirtualDevice(controller->handle);
+    if(R_FAILED(rc))
+        janet_panicf("failed to detach virtual device: code %#x", rc);
 
     return janet_wrap_nil();
 }
@@ -97,7 +95,7 @@ static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
 static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 2);
-    JanetTuple handleAndState = janet_gettuple(argv, 0);
+    JanetAbstract jController = janet_getabstract(argv, 0, &controller_type);
     Janet jButtons = argv[1];
     u64 buttons = 0;
     if(janet_checktype(jButtons, JANET_ABSTRACT))
@@ -109,21 +107,11 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
         janet_panicf("bad slot 1, expected u64, got %v", jButtons);
     }
 
-    Janet jHandle = handleAndState[0];
-    Janet jState = handleAndState[1];
-    if(janet_checktype(jHandle, JANET_ABSTRACT) && janet_checktype(jState, JANET_POINTER))
-    {
-        u64 handle = janet_unwrap_u64(jHandle);
-        HiddbgHdlsState* state = (HiddbgHdlsState*) janet_unwrap_abstract(jState);
-
-        state->buttons = buttons;
-
-        hiddbgSetHdlsState(handle, state);
-    }
-    else
-    {
-        janet_panicf("bad slot 0, expected tuple of u64 and pointer, got %v", argv[0]);
-    }
+    Controller* controller = (Controller*) jController;
+    controller->state.buttons = buttons;
+    Result rc = hiddbgSetHdlsState(controller->handle, &controller->state);
+    if(R_FAILED(rc))
+        janet_panicf("failed to set state of virtual device: code %#x", rc);
 
     return janet_wrap_nil();
 }
@@ -131,7 +119,7 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
 static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
 {
     janet_arity(argc, 3, 4);
-    JanetTuple handleAndState = janet_gettuple(argv, 0);
+    JanetAbstract jController = janet_getabstract(argv, 0, &controller_type);
     Janet jIndex = argv[1];
     size_t joystickIndex = 0;
     if(janet_checktype(jIndex, JANET_NUMBER))
@@ -188,22 +176,12 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         jy = janet_getinteger(argv, 3);
     }
 
-    Janet jHandle = handleAndState[0];
-    Janet jState = handleAndState[1];
-    if(janet_checktype(jHandle, JANET_ABSTRACT) && janet_checktype(jState, JANET_POINTER))
-    {
-        u64 handle = janet_unwrap_u64(jHandle);
-        HiddbgHdlsState* state = (HiddbgHdlsState*) janet_unwrap_abstract(jState);
-
-        state->joysticks[joystickIndex].dx = jx;
-        state->joysticks[joystickIndex].dy = jy;
-
-        hiddbgSetHdlsState(handle, state);
-    }
-    else
-    {
-        janet_panicf("bad slot 0, expected tuple of u64 and pointer, got %v", argv[0]);
-    }
+    Controller* controller = (Controller*) jController;
+    controller->state.joysticks[joystickIndex].dx = jx;
+    controller->state.joysticks[joystickIndex].dy = jy;
+    Result rc = hiddbgSetHdlsState(controller->handle, &controller->state);
+    if(R_FAILED(rc))
+        janet_panicf("failed to set state of virtual device: code %#x", rc);
 
     return janet_wrap_nil();
 }

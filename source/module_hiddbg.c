@@ -78,7 +78,7 @@ static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
     janet_fixarity(argc, 1);
     JanetTuple handleAndState = janet_gettuple(argv, 0);
     Janet jHandle = handleAndState[0];
-    if(janet_checktype(jHandle, JANET_NUMBER))
+    if(janet_checktype(jHandle, JANET_ABSTRACT))
     {
         u64 handle = janet_unwrap_u64(jHandle);
 
@@ -88,7 +88,7 @@ static Janet module_hiddbg_detach(int32_t argc, Janet* argv)
     }
     else
     {
-        janet_panicf("bad slot 0, expected tuple of number and pointer, got %v", argv[0]);
+        janet_panicf("bad slot 0, expected tuple of u64 and pointer, got %v", argv[0]);
     }
 
     return janet_wrap_nil();
@@ -100,18 +100,18 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
     JanetTuple handleAndState = janet_gettuple(argv, 0);
     Janet jButtons = argv[1];
     u64 buttons = 0;
-    if(janet_checktype(jButtons, JANET_NUMBER))
+    if(janet_checktype(jButtons, JANET_ABSTRACT))
     {
         buttons = janet_unwrap_u64(jButtons);
     }
     else
     {
-        janet_panicf("bad slot 1, expected int/u64, got %v", jButtons);
+        janet_panicf("bad slot 1, expected u64, got %v", jButtons);
     }
 
     Janet jHandle = handleAndState[0];
     Janet jState = handleAndState[1];
-    if(janet_checktype(jHandle, JANET_NUMBER) && janet_checktype(jState, JANET_POINTER))
+    if(janet_checktype(jHandle, JANET_ABSTRACT) && janet_checktype(jState, JANET_POINTER))
     {
         u64 handle = janet_unwrap_u64(jHandle);
         HiddbgHdlsState* state = (HiddbgHdlsState*) janet_unwrap_abstract(jState);
@@ -122,7 +122,7 @@ static Janet module_hiddbg_set_buttons(int32_t argc, Janet* argv)
     }
     else
     {
-        janet_panicf("bad slot 0, expected tuple of number and pointer, got %v", argv[0]);
+        janet_panicf("bad slot 0, expected tuple of u64 and pointer, got %v", argv[0]);
     }
 
     return janet_wrap_nil();
@@ -171,7 +171,7 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         }
         else
         {
-            janet_panicf("bad joystick axis position, expected number, got %v", jx);
+            janet_panicf("bad joystick axis position, expected signed 32-bit integer, got %v", jx);
         }
         if(janet_checktype(y, JANET_NUMBER))
         {
@@ -179,7 +179,7 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         }
         else
         {
-            janet_panicf("bad joystick axis position, expected number, got %v", jy);
+            janet_panicf("bad joystick axis position, expected signed 32-bit integer, got %v", jy);
         }
     }
     else if(argc == 4)
@@ -190,7 +190,7 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
 
     Janet jHandle = handleAndState[0];
     Janet jState = handleAndState[1];
-    if(janet_checktype(jHandle, JANET_NUMBER) && janet_checktype(jState, JANET_POINTER))
+    if(janet_checktype(jHandle, JANET_ABSTRACT) && janet_checktype(jState, JANET_POINTER))
     {
         u64 handle = janet_unwrap_u64(jHandle);
         HiddbgHdlsState* state = (HiddbgHdlsState*) janet_unwrap_abstract(jState);
@@ -202,7 +202,7 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
     }
     else
     {
-        janet_panicf("bad slot 0, expected tuple of number and pointer, got %v", argv[0]);
+        janet_panicf("bad slot 0, expected tuple of u64 and pointer, got %v", argv[0]);
     }
 
     return janet_wrap_nil();

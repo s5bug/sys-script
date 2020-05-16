@@ -26,6 +26,8 @@
 #ifndef JANETCONF_H
 #define JANETCONF_H
 
+#include <switch.h>
+
 #define JANET_VERSION_MAJOR 1
 #define JANET_VERSION_MINOR 9
 #define JANET_VERSION_PATCH 1
@@ -35,9 +37,9 @@
 /* #define JANET_BUILD "local" */
 
 /* These settings all affect linking, so use cautiously. */
-/* #define JANET_SINGLE_THREADED */
-/* #define JANET_NO_DYNAMIC_MODULES */
-/* #define JANET_NO_NANBOX */
+#define JANET_SINGLE_THREADED
+#define JANET_NO_DYNAMIC_MODULES
+#define JANET_NO_NANBOX
 /* #define JANET_API __attribute__((visibility ("default"))) */
 
 /* These settings should be specified before amalgamation is
@@ -45,7 +47,7 @@
 /* #define JANET_NO_DOCSTRINGS */
 /* #define JANET_NO_SOURCEMAPS */
 /* #define JANET_REDUCED_OS */
-/* #define JANET_NO_PROCESSES */
+#define JANET_NO_PROCESSES
 /* #define JANET_NO_ASSEMBLER */
 /* #define JANET_NO_PEG */
 /* #define JANET_NO_NET */
@@ -54,18 +56,18 @@
 
 /* Other settings */
 /* #define JANET_NO_PRF */
-/* #define JANET_NO_UTC_MKTIME */
-/* #define JANET_NO_REALPATH */
-/* #define JANET_NO_SYMLINKS */
-/* #define JANET_NO_UMASK */
-/* #define JANET_OUT_OF_MEMORY do { printf("janet out of memory\n"); exit(1); } while (0) */
+#define JANET_NO_UTC_MKTIME
+#define JANET_NO_REALPATH
+#define JANET_NO_SYMLINKS
+#define JANET_NO_UMASK
+#define JANET_OUT_OF_MEMORY do { fatalThrow(0x4a8); exit(1); } while (0)
 /* #define JANET_EXIT(msg) do { printf("C assert failed executing janet: %s\n", msg); exit(1); } while (0) */
 /* #define JANET_TOP_LEVEL_SIGNAL(msg) call_my_function((msg), stderr) */
 /* #define JANET_RECURSION_GUARD 1024 */
 /* #define JANET_MAX_PROTO_DEPTH 200 */
 /* #define JANET_MAX_MACRO_EXPAND 200 */
 /* #define JANET_STACK_MAX 16384 */
-/* #define JANET_OS_NAME my-custom-os */
-/* #define JANET_ARCH_NAME pdp-8 */
+#define JANET_OS_NAME switch
+#define JANET_ARCH_NAME aarch64
 
 #endif /* end of include guard: JANETCONF_H */

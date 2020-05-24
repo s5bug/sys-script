@@ -138,6 +138,8 @@ int main(int argc, char* argv[])
         "(try (dofile \"sdmc:/boot.janet\") ([err fiber] (debug/stacktrace fiber)))\n"
         "(file/close log)\n", "main", NULL);
 
+    janet_loop();
+
     // Deinitialization and resources clean up code can go here.
     janet_deinit();
 

@@ -9,21 +9,31 @@ static const JanetAbstractType vi_display_type =
     "vi/display", JANET_ATEND_NAME
 };
 
-static Janet module_vi_default_display(int32_t argc, Janet* argv)
+static Janet module_vi_display_open(int32_t argc, Janet* argv)
 {
-    janet_fixarity(argc, 0);
+    janet_arity(argc, 0, 1);
 
     ViDisplay* disp = janet_abstract(&vi_display_type, sizeof(ViDisplay));
     memset(disp, 0, sizeof(ViDisplay));
 
-    Result rc = viOpenDefaultDisplay(disp);
+    Result rc;
+    if(argc == 0)
+    {
+        rc = viOpenDefaultDisplay(disp);
+    }
+    else
+    {
+        const char* str = janet_getcstring(argv, 0);
+        rc = viOpenDisplay(str, disp);
+    }
+    
     if(R_FAILED(rc))
         janet_panicf("failed to open default display: code %#x", rc);
     
     return janet_wrap_abstract(disp);
 }
 
-static Janet module_vi_close_display(int32_t argc, Janet* argv)
+static Janet module_vi_display_close(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
 
@@ -36,7 +46,7 @@ static Janet module_vi_close_display(int32_t argc, Janet* argv)
     return janet_wrap_nil();
 }
 
-static Janet module_vi_vsync_event(int32_t argc, Janet* argv)
+static Janet module_vi_display_event_vsync(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
 
@@ -55,16 +65,16 @@ static Janet module_vi_vsync_event(int32_t argc, Janet* argv)
 const JanetReg vi_cfuns[] =
 {
     {
-        "vi/default-display", module_vi_default_display,
-        "(vi/default-display)\n\nOpens the Switch's default display."
+        "vi/display-open", module_vi_display_open,
+        "(vi/display-open &opt id)\n\nOpens a display."
     },
     {
-        "vi/close-display", module_vi_close_display,
-        "(vi/close-display display)\n\nCloses a display."
+        "vi/display-close", module_vi_display_close,
+        "(vi/display-close disp)\n\nCloses a display."
     },
     {
-        "vi/vsync-event", module_vi_vsync_event,
-        "(vi/vsync-event)\n\nGets the VSync event of the specified display."
+        "vi/display-event-vsync", module_vi_display_event_vsync,
+        "(vi/display-event-vnync disp)\n\nGets the VSync event of the specified display."
     },
     {NULL, NULL, NULL}
 };

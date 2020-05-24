@@ -58,14 +58,15 @@ Sets the joystick `stick` of `controller` to (`x`, `y`). `stick` may be
 
 ### `vi`
 
-#### `(vi/default-display)`
+#### `(vi/display-open &opt id)`
 
-Gets a reference to the Switch's default display.
+Opens a display. `id` may be a string. If `id` is missing, the default display
+will be opened.
 
-#### `(vi/close-display display)`
+#### `(vi/display-close disp)`
 
-Closes a reference to a display.
+Closes `disp`.
 
-#### `(vi/vsync-event display)`
+#### `(vi/display-event-vsync disp)`
 
-Gets a reference to a display's VSync event.
+Returns `disp`'s VSync event.

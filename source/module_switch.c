@@ -7,7 +7,7 @@ const JanetAbstractType switch_event_type =
     "switch/event", JANET_ATEND_NAME
 };
 
-static Janet module_switch_close_event(int32_t argc, Janet* argv)
+static Janet module_switch_event_close(int32_t argc, Janet* argv)
 {
     janet_fixarity(argc, 1);
 
@@ -40,8 +40,8 @@ static Janet module_switch_event_wait(int32_t argc, Janet* argv)
 const JanetReg switch_cfuns[] =
 {
     {
-        "switch/close-event", module_switch_close_event,
-        "(switch/close-event event)\n\nCloses an event."
+        "switch/event-close", module_switch_event_close,
+        "(switch/event-close event)\n\nCloses an event."
     },
     {
         "switch/event-wait", module_switch_event_wait,

@@ -37,6 +37,21 @@ void __libnx_initheap(void)
 }
 
 // Init/exit services, update as needed.
+static const SocketInitConfig socketConfig =
+{
+    .bsdsockets_version = 1,
+
+    .tcp_tx_buf_size = 1024,
+    .tcp_rx_buf_size = 256,
+    .tcp_tx_buf_max_size = 0,
+    .tcp_rx_buf_max_size = 0,
+
+    .udp_tx_buf_size = 0x2400,
+    .udp_rx_buf_size = 0xA500,
+
+    .sb_efficiency = 2,
+};
+
 void __attribute__((weak)) __appInit(void)
 {
     Result rc;
@@ -76,6 +91,10 @@ void __attribute__((weak)) __appInit(void)
     rc = viInitialize(ViServiceType_System);
     if (R_FAILED(rc))
         fatalThrow(rc);
+    
+    rc = socketInitialize(&socketConfig);
+    if (R_FAILED(rc))
+        fatalThrow(rc);
 }
 
 void __attribute__((weak)) userAppExit(void);
@@ -83,6 +102,7 @@ void __attribute__((weak)) userAppExit(void);
 void __attribute__((weak)) __appExit(void)
 {
     // Cleanup default services.
+    socketExit();
     viExit();
     hiddbgExit();
     fsdevUnmountAll();

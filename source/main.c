@@ -11,6 +11,7 @@
 
 // Include custom modules
 #include "module_switch.h"
+#include "module_hid.h"
 #include "module_hiddbg.h"
 #include "module_vi.h"
 
@@ -104,6 +105,7 @@ int main(int argc, char* argv[])
     // If you need threads, you can use threadCreate etc.
     JanetTable* env = janet_core_env(NULL);
     janet_cfuns(env, NULL, switch_cfuns);
+    janet_cfuns(env, NULL, hid_cfuns);
     janet_cfuns(env, NULL, hiddbg_cfuns);
     janet_cfuns(env, NULL, vi_cfuns);
 

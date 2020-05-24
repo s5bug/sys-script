@@ -102,27 +102,19 @@ int main(int argc, char* argv[])
 
     // Your code / main loop goes here.
     // If you need threads, you can use threadCreate etc.
-    while(true)
-    {
-        hidScanInput();
+    JanetTable* env = janet_core_env(NULL);
+    janet_cfuns(env, NULL, switch_cfuns);
+    janet_cfuns(env, NULL, hiddbg_cfuns);
+    janet_cfuns(env, NULL, vi_cfuns);
 
-        if(hidKeyboardDown(KBD_F1))
-        {
-            JanetTable* env = janet_core_env(NULL);
-            janet_cfuns(env, NULL, switch_cfuns);
-            janet_cfuns(env, NULL, hiddbg_cfuns);
-            janet_cfuns(env, NULL, vi_cfuns);
-
-            janet_dostring(env,
-                "(def log (file/open \"sdmc:/jout.log\" :a))\n"
-                "(setdyn :out log)\n"
-                "(setdyn :err log)\n"
-                "(try (dofile \"sdmc:/scripts/script1.janet\") ([err fiber] (debug/stacktrace fiber)))\n"
-                "(file/close log)", "main", NULL);
-        }
-
-        svcSleepThread(6250000);
-    }
+    janet_dostring(env,
+        "(def sys-script/log-path \"sdmc:/boot.janet.log\")\n"
+        "(os/rm sys-script/log-path)\n"
+        "(def log (file/open sys-script/log-path :a))\n"
+        "(setdyn :out log)\n"
+        "(setdyn :err log)\n"
+        "(try (dofile \"sdmc:/boot.janet\") ([err fiber] (debug/stacktrace fiber)))\n"
+        "(file/close log)\n", "main", NULL);
 
     // Deinitialization and resources clean up code can go here.
     janet_deinit();

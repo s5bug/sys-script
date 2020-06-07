@@ -4,6 +4,7 @@
 (def rootpath "sdmc:/script/")
 
 (def logpath (string rootpath "log/"))
+(os/mkdir logpath)
 
 (def now (os/date))
 (def logname (string/format "%d%02d%02d-%02d%02d%02d")

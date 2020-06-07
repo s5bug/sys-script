@@ -168,9 +168,9 @@ $(BUILD):
 clean:
 	@echo clean ...
 ifeq ($(strip $(APP_JSON)),)
-	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+	@rm -fr sd $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 else
-	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
+	@rm -fr sd $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
 endif
 
 
@@ -220,3 +220,15 @@ $(OFILES_SRC)	: $(HFILES_BIN)
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------
+
+sd: $(BUILD) $(OUTPUT).nsp FORCE
+	@echo writing output to sd/ ...
+	@mkdir -p $(TOPDIR)/sd/atmosphere/contents/4200736372697074/flags
+	@cp -f $(TARGET).nsp $(TOPDIR)/sd/atmosphere/contents/4200736372697074/exefs.nsp
+	@touch $(TOPDIR)/sd/atmosphere/contents/4200736372697074/flags/boot2.flag
+	@cp -f $(TOPDIR)/toolbox.json $(TOPDIR)/sd/atmosphere/contents/4200736372697074/toolbox.json
+	@rm -fr $(TOPDIR)/sd/script
+	@cp -fr $(TOPDIR)/res $(TOPDIR)/sd/script
+	@echo done
+
+FORCE:

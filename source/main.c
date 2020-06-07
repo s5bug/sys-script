@@ -91,6 +91,10 @@ void __attribute__((weak)) __appInit(void)
     rc = viInitialize(ViServiceType_System);
     if (R_FAILED(rc))
         fatalThrow(rc);
+
+    rc = timeInitialize();
+    if (R_FAILED(rc))
+        fatalThrow(rc);
     
     rc = socketInitialize(&socketConfig);
     if (R_FAILED(rc))
@@ -103,6 +107,7 @@ void __attribute__((weak)) __appExit(void)
 {
     // Cleanup default services.
     socketExit();
+    timeExit();
     viExit();
     hiddbgExit();
     fsdevUnmountAll();
@@ -129,14 +134,7 @@ int main(int argc, char* argv[])
     janet_cfuns(env, NULL, hiddbg_cfuns);
     janet_cfuns(env, NULL, vi_cfuns);
 
-    janet_dostring(env,
-        "(def sys-script/log-path \"sdmc:/boot.janet.log\")\n"
-        "(os/rm sys-script/log-path)\n"
-        "(def log (file/open sys-script/log-path :a))\n"
-        "(setdyn :out log)\n"
-        "(setdyn :err log)\n"
-        "(try (dofile \"sdmc:/boot.janet\") ([err fiber] (debug/stacktrace fiber)))\n"
-        "(file/close log)\n", "main", NULL);
+    janet_dostring(env, "(dofile \"sdmc:/script/sys/boot.janet\")\n", "sys-script", NULL);
 
     janet_loop();
 

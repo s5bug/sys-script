@@ -8,8 +8,8 @@ _TODO: Fully flesh out this section_
 
 sys-script's Title ID is `4200736372697074`.
 
-On startup, your Switch will execute `sdmc:/boot.janet`, recording any output
-or errors in `sdmc:/boot.janet.log`.
+On startup, your Switch will execute `sdmc:/script/main.janet`, outputting logs
+in `sdmc:/script/log`.
 
 ## Additional Functions
 

@@ -39,8 +39,8 @@ Tests if `key` was down during the last scan.
 
 Attaches and returns a new virtual controller. `type` may be one of
 `:pro-controller`. `interface` may be one of `:bluetooth`, `:rail`, `:usb`.
-`body`, `buttons`, `left-grip`, and `right-grip` are all `(int/u64`s
-in little-endian RGBA (`0xAABBGGRR`).
+`body`, `buttons`, `left-grip`, and `right-grip` are all numbers in
+little-endian RGBA (`0xAABBGGRR`).
 
 #### `(hiddbg/detach controller)`
 

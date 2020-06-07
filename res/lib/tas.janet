@@ -1,4 +1,3 @@
-
 (defn- bit [x] (blshift (int/u64 "1") x))
 
 (def buttons
@@ -18,7 +17,6 @@
     "MINUS" (int/u64 "2048")})
 
 (defn clearinputs [con]
-  "Clears all button and joystick inputs"
   (hiddbg/set-buttons con (int/u64 "0"))
   (hiddbg/set-joystick con :left 0 0)
   (hiddbg/set-joystick con :right 0 0))
@@ -33,7 +31,6 @@
       :main (* (<- :d+) " " :btns " " :stick " " :stick)}))
 
 (defn runinput [line controller vsync frame]
-  "Parses and runs a single line"
   (def res (peg/match ssctf line))
   (def nframe (scan-number (in res 0)))
   (def btns (reduce bor (int/u64 "0") (map buttons (array/slice res 1 -5))))
@@ -48,9 +45,9 @@
   (hiddbg/set-joystick controller :right ;(map scan-number (array/slice res -3 -1)))
   nframe)
 
-(defn run-tas [path controller]
-  "path: Path to nx-TAS format script to run, controller: controller object to use to run"
-  (with [s8 (file/open path :r) file/close]
+(defn run-tas [p controller]
+
+  (with [s8 (file/open p :r) file/close]
     (with [disp (vi/display-open) vi/display-close]
       (with [vsync (vi/display-event-vsync disp) switch/event-close]
 

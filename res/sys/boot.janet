@@ -7,13 +7,13 @@
 (os/mkdir logpath)
 
 (def now (os/date))
-(def logname (string/format "%d%02d%02d-%02d%02d%02d")
+(def logname (string/format "%d%02d%02d-%02d%02d%02d"
   (now :year)
   (now :month)
   (now :month-day)
   (now :hours)
   (now :minutes)
-  (now :seconds))
+  (now :seconds)))
 
 (def logfile (string logpath logname ".log"))
 

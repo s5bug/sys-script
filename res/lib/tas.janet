@@ -5,6 +5,8 @@
     "B" (bit 1)
     "X" (bit 2)
     "Y" (bit 3)
+    "LSTICK" (bit 4)
+    "RSTICK" (bit 5)
     "L" (bit 6)
     "R" (bit 7)
     "ZL" (bit 8)

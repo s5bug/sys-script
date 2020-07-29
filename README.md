@@ -29,6 +29,10 @@ Waits for the firing of event `ev`.
 
 Scans input from HID.
 
+#### `(hid/keyboard-held key)`
+
+Tests if `key` is down.
+
 #### `(hid/keyboard-down key)`
 
 Tests if `key` was down during the last scan.

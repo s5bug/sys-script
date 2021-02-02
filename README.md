@@ -58,7 +58,7 @@ _TODO: Document how to figure out your button flags_
 #### `(hiddbg/set-joystick controller stick x y)`
 
 Sets the joystick `stick` of `controller` to (`x`, `y`). `stick` may be
-`:left`, `:right`, or a number.
+`:left` or `:right`.
 
 ### `vi`
 

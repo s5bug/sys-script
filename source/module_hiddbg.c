@@ -3,7 +3,7 @@
 #include <switch.h>
 
 typedef struct {
-    u64 handle;
+    HiddbgHdlsHandle handle;
     HiddbgHdlsState state;
 } Controller;
 
@@ -33,19 +33,19 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
         janet_panic("unknown device type passed to hiddbg/attach");
     }
 
-    u8 interfaceTypeNum = NpadInterfaceType_Unknown4;
+    u8 interfaceTypeNum = HidNpadInterfaceType_Unknown4;
     Janet interfaceTypeKw = janet_wrap_keyword(interfaceType);
     if(janet_keyeq(interfaceTypeKw, "bluetooth"))
     {
-        interfaceTypeNum = NpadInterfaceType_Bluetooth;
+        interfaceTypeNum = HidNpadInterfaceType_Bluetooth;
     }
     else if(janet_keyeq(interfaceTypeKw, "rail"))
     {
-        interfaceTypeNum = NpadInterfaceType_Rail;
+        interfaceTypeNum = HidNpadInterfaceType_Rail;
     }
     else if(janet_keyeq(interfaceTypeKw, "usb"))
     {
-        interfaceTypeNum = NpadInterfaceType_USB;
+        interfaceTypeNum = HidNpadInterfaceType_USB;
     }
     
     HiddbgHdlsDeviceInfo info = { 0 };
@@ -63,7 +63,7 @@ static Janet module_hiddbg_attach(int32_t argc, Janet* argv)
     if(R_FAILED(rc))
         janet_panicf("failed to attach virtual device: code %#x", rc);
     
-    controller->state.batteryCharge = 4;
+    controller->state.battery_level = 4;
     
     rc = hiddbgSetHdlsState(controller->handle, &controller->state);
     if(R_FAILED(rc))
@@ -112,20 +112,16 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
     janet_arity(argc, 3, 4);
     Controller* controller = janet_getabstract(argv, 0, &controller_type);
     Janet jIndex = argv[1];
-    size_t joystickIndex = 0;
-    if(janet_checktype(jIndex, JANET_NUMBER))
-    {
-        joystickIndex = (size_t) janet_unwrap_number(jIndex);
-    }
-    else if(janet_checktype(jIndex, JANET_KEYWORD))
+    HidAnalogStickState* joystick = 0;
+    if(janet_checktype(jIndex, JANET_KEYWORD))
     {
         if(janet_keyeq(jIndex, "left"))
         {
-            joystickIndex = 0;
+            joystick = &controller->state.analog_stick_l;
         }
         else if(janet_keyeq(jIndex, "right"))
         {
-            joystickIndex = 1;
+            joystick = &controller->state.analog_stick_r;
         }
         else
         {
@@ -134,7 +130,7 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
     }
     else
     {
-        janet_panicf("bad slot 1, expected number|keyword, got %v", jIndex);
+        janet_panicf("bad slot 1, expected keyword, got %v", jIndex);
     }
     s32 jx = 0;
     s32 jy = 0;
@@ -167,8 +163,8 @@ static Janet module_hiddbg_set_joystick(int32_t argc, Janet* argv)
         jy = janet_getinteger(argv, 3);
     }
 
-    controller->state.joysticks[joystickIndex].dx = jx;
-    controller->state.joysticks[joystickIndex].dy = jy;
+    joystick->x = jx;
+    joystick->y = jy;
     Result rc = hiddbgSetHdlsState(controller->handle, &controller->state);
     if(R_FAILED(rc))
         janet_panicf("failed to set state of virtual device: code %#x", rc);

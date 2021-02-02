@@ -136,7 +136,8 @@ int main(int argc, char* argv[])
 
     janet_dostring(env, "(dofile \"sdmc:/script/sys/boot.janet\")\n", "sys-script", NULL);
 
-    janet_loop();
+    // TODO: Figure out the pipe situation
+    // janet_loop();
 
     // Deinitialization and resources clean up code can go here.
     janet_deinit();

@@ -96,9 +96,9 @@ void __attribute__((weak)) __appInit(void)
     if (R_FAILED(rc))
         fatalThrow(rc);
     
-    rc = socketInitialize(&socketConfig);
-    if (R_FAILED(rc))
-        fatalThrow(rc);
+    // rc = socketInitialize(&socketConfig);
+    // if (R_FAILED(rc))
+    //     fatalThrow(rc);
 }
 
 void __attribute__((weak)) userAppExit(void);
@@ -106,7 +106,7 @@ void __attribute__((weak)) userAppExit(void);
 void __attribute__((weak)) __appExit(void)
 {
     // Cleanup default services.
-    socketExit();
+    // socketExit();
     timeExit();
     viExit();
     hiddbgExit();
@@ -134,7 +134,10 @@ int main(int argc, char* argv[])
     janet_cfuns(env, NULL, hiddbg_cfuns);
     janet_cfuns(env, NULL, vi_cfuns);
 
-    janet_dostring(env, "(dofile \"sdmc:/script/sys/boot.janet\")\n", "sys-script", NULL);
+    int result = janet_dostring(env, "(dofile \"sdmc:/script/sys/boot.janet\")\n", "sys-script", NULL);
+    if(result != 0) {
+        fatalThrow(result);
+    }
 
     // TODO: Figure out the pipe situation
     // janet_loop();

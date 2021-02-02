@@ -2,44 +2,43 @@
 
 #include <switch.h>
 
-static Janet module_hid_scan_input(int32_t argc, Janet* argv)
-{
-    janet_fixarity(argc, 0);
+static Janet module_hid_keyboard_states(int32_t argc, Janet* argv) {
+    janet_arity(argc, 0, 1);
 
-    hidScanInput();
+    uint64_t max = 1;
+    if(argc == 1) {
+        max = janet_unwrap_u64(argv[0]);
+    }
 
-    return janet_wrap_nil();
-}
+    HidKeyboardState states[max];
+    uint64_t len = hidGetKeyboardStates(states, max);
 
-static Janet module_hid_keyboard_held(int32_t argc, Janet* argv)
-{
-    janet_fixarity(argc, 1);
-    int32_t scancode = janet_getinteger(argv, 0);
+    JanetArray* resultArray = janet_array(len);
+    for(int i = 0; i < len; i++) {
+        JanetTable* table = janet_table(3);
 
-    return janet_wrap_boolean(hidKeyboardHeld(scancode));
-}
+        janet_table_put(table, janet_wrap_keyword(janet_cstring("sampling-number")), janet_wrap_u64(states[i].sampling_number));
+        janet_table_put(table, janet_wrap_keyword(janet_cstring("modifiers")), janet_wrap_u64(states[i].modifiers));
 
-static Janet module_hid_keyboard_down(int32_t argc, Janet* argv)
-{
-    janet_fixarity(argc, 1);
-    int32_t scancode = janet_getinteger(argv, 0);
+        JanetArray* keyArray = janet_array(4);
 
-    return janet_wrap_boolean(hidKeyboardDown(scancode));
+        for(int k = 0; k < 3; k++) {
+            janet_array_push(keyArray, janet_wrap_u64(states[i].keys[k]));
+        }
+        
+        janet_table_put(table, janet_wrap_keyword(janet_cstring("keys")), janet_wrap_array(keyArray));
+
+        janet_array_push(resultArray, janet_wrap_table(table));
+    }
+
+    return janet_wrap_array(resultArray);
 }
 
 const JanetReg hid_cfuns[] =
 {
     {
-        "hid/scan-input", module_hid_scan_input,
-        "(hid/scan-input)\n\nInitiates a scan of HID input."
-    },
-    {
-        "hid/keyboard-held", module_hid_keyboard_held,
-        "(hid/keyboard-held key)\n\nReturn whether a key was down during the last scan."
-    },
-    {
-        "hid/keyboard-down", module_hid_keyboard_down,
-        "(hid/keyboard-down key)\n\nReturns whether key was pressed down before the last scan."
+        "hid/keyboard-states", module_hid_keyboard_states,
+        "(hid/keyboard-states &opt max)\n\nReturns max number of keyboard states, or 1 if max is not present."
     },
     {NULL, NULL, NULL}
 };

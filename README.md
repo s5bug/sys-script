@@ -25,17 +25,26 @@ Waits for the firing of event `ev`.
 
 ### `hid`
 
-#### `(hid/scan-input)`
+#### `(hid/keyboard states &opt max)`
 
-Scans input from HID.
+Fetches `n` keyboard states, where `n` is `max` if it is present, otherwise it
+is `1`. Returns a table that looks like
 
-#### `(hid/keyboard-held key)`
+```lisp
+@{
+  :sampling-number 0x################
+  :modifiers 0x################
+  :keys @[
+    0x################
+    0x################
+    0x################
+    0x################
+  ]
+}
+```
 
-Tests if `key` is down.
-
-#### `(hid/keyboard-down key)`
-
-Tests if `key` was down during the last scan.
+This table should directly match
+[https://switchbrew.github.io/libnx/structHidKeyboardState.html](`HidKeyboardState`).
 
 ### `hiddbg`
 

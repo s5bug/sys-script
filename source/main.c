@@ -120,6 +120,8 @@ void __attribute__((weak)) __appExit(void)
 int main(int argc, char* argv[])
 {
     // Initialization code can go here.
+    hidInitializeKeyboard();
+
     Result rc = hiddbgAttachHdlsWorkBuffer();
     if (R_FAILED(rc))
         fatalThrow(rc);

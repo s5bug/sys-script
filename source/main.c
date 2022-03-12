@@ -122,7 +122,8 @@ int main(int argc, char* argv[])
     // Initialization code can go here.
     hidInitializeKeyboard();
 
-    Result rc = hiddbgAttachHdlsWorkBuffer();
+    HiddbgHdlsSessionId hiddbgSessionId;
+    Result rc = hiddbgAttachHdlsWorkBuffer(&hiddbgSessionId);
     if (R_FAILED(rc))
         fatalThrow(rc);
 
@@ -141,13 +142,13 @@ int main(int argc, char* argv[])
         fatalThrow(MAKERESULT(0x7A5, result));
     }
 
-    // TODO: Figure out the pipe situation
+    // TODO
     // janet_loop();
 
     // Deinitialization and resources clean up code can go here.
     janet_deinit();
 
-    rc = hiddbgReleaseHdlsWorkBuffer();
+    rc = hiddbgReleaseHdlsWorkBuffer(hiddbgSessionId);
 
     return 0;
 }
